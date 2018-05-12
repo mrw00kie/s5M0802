@@ -1,0 +1,419 @@
+jmp start
+// functions
+// 1 - List Files
+// 2 - Edit Files
+// 3 - Create Files
+// Choise: 
+:printOptions
+	mov dx,#31
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#2d
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#4c
+	out $c0
+	mov dx,#69
+	out $c0
+	mov dx,#73
+	out $c0
+	mov dx,#74
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#46
+	out $c0
+	mov dx,#69
+	out $c0
+	mov dx,#6c
+	out $c0
+	mov dx,#65
+	out $c0
+	mov dx,#73
+	out $c0
+	mov dx,#0a
+	out $c0
+	mov dx,#32
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#2d
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#50
+	out $c0
+	mov dx,#72
+	out $c0
+	mov dx,#69
+	out $c0
+	mov dx,#6e
+	out $c0
+	mov dx,#74
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#66
+	out $c0
+	mov dx,#69
+	out $c0
+	mov dx,#6c
+	out $c0
+	mov dx,#65
+	out $c0
+	mov dx,#0a
+	out $c0
+	mov dx,#33 
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#2d
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#43
+	out $c0
+	mov dx,#72
+	out $c0
+	mov dx,#65
+	out $c0
+	mov dx,#61
+	out $c0
+	mov dx,#74
+	out $c0
+	mov dx,#65
+	out $c0
+	mov dx,#20
+	out $c0
+	mov dx,#46
+	out $c0
+	mov dx,#69
+	out $c0
+	mov dx,#6c
+	out $c0
+	mov dx,#65
+	out $c0
+	mov dx,#73
+	out $c0
+	mov dx,#0a
+	out $c0
+	mov dx,#43
+	out $c0
+	mov dx,#68
+	out $c0
+	mov dx,#6f
+	out $c0
+	mov dx,#69
+	out $c0
+	mov dx,#73
+	out $c0
+	mov dx,#65
+	out $c0
+	mov dx,#3a
+	out $c0
+	mov dx,#20
+	out $c0
+ret
+//
+//
+//
+:start
+call printOptions
+// get input
+:inputstart
+	in $a0
+	mov AX,DX
+	add AX,#00
+	jz inputstart
+	mov AX,DX
+	sub AX,#33
+	jz option3
+	mov AX,DX
+	sub AX,#32
+	jz option2
+	mov AX,DX
+	sub AX,#31
+	jz option1
+	jmp inputstart
+//
+//
+//
+// list files
+:option1
+	// CLS
+	mov DX,#ff
+	out $c0
+	//
+	// print "Files:"
+	mov DX,#46
+	out $c0
+	mov DX,#69
+	out $c0
+	mov DX,#6c
+	out $c0
+	mov DX,#65
+	out $c0
+	mov DX,#73
+	out $c0
+	mov DX,#3a
+	out $c0
+	//
+	// start search
+	mov AX,#10
+	mov BX,#00
+	:startsearch
+		LDX
+		mov $00,AX
+		mov AX,DX
+		sub AX,#25
+		jnz endsearch
+		inc CX
+		// print "/n -"
+		mov DX,#0a
+		out $c0
+		mov DX,#20
+		out $c0
+		mov DX,#2d
+		out $c0
+		// get name of file
+			:writenamestart
+			mov AX,BX
+			add AX,#01
+			mov BX,AX
+			mov AX,$00
+			LDX
+			mov AX,DX
+			sub AX,#25
+			jz writenameend
+			out $c0
+			jmp writenamestart
+			:writenameend
+		//
+		mov BX,#00
+		mov AX,$00
+		add AX,#05
+		jmp startsearch
+	:endsearch
+	//
+	//wait until a button pressed
+	:optn1wait
+		in $a0
+		mov AX,DX
+		add AX,#00
+		jz optn1wait
+	//
+	jmp reset
+//
+//
+//
+//
+// edit files
+:option2
+	// CLS; Print "File Nr.: "
+	mov DX,#ff
+	out $c0
+	mov DX,#46
+	out $c0
+	mov DX,#69
+	out $c0
+	mov DX,#6c
+	out $c0
+	mov DX,#65
+	out $c0
+	mov DX,#20
+	out $c0
+	mov DX,#4e
+	out $c0
+	mov DX,#72
+	out $c0
+	mov DX,#2e
+	out $c0
+	mov DX,#3a
+	out $c0
+	mov DX,#20
+	out $c0
+	//
+	// get input file nr
+	:startgetfilenrtoopen
+		in $a0
+		mov AX,DX
+		// empty input
+		add AX,#00
+		jz startgetfilenrtoopen
+	// CLS
+	mov DX,#ff
+	out $c0
+	// convert ascii nummber into bin/hex nummber
+	sub AX,#30
+	mov BX,#05
+	mul AX,BX
+	add AX,#10
+	mov BX,#01
+	mov $00,AX
+	mov $01,BX
+	// went to file
+	// print file
+	:startprintfile
+		LDX
+		mov AX,DX
+		sub AX,#ff
+		jz endprintfile
+		mov AX,DX
+		sub AX,#25
+		jnz turntoenter
+			mov DX,#0a
+		:turntoenter
+		out $c0
+		mov AX,$01
+		add AX,#01
+		mov $01,AX
+		mov BX,AX
+		mov AX,$00
+		adc AX,#00
+		mov $00,AX
+		jmp startprintfile
+	:endprintfile
+	//
+	// wait until any key is pressed
+	:startwaitforkey
+		in $a0
+		mov AX,DX
+		add AX,#00
+		jz startwaitforkey
+	//
+	jmp reset
+//
+//
+//
+//
+// create files
+:option3
+	// CLS
+	mov DX,#ff
+	out $c0
+	//
+	// print "Name:"
+	mov DX,#4e
+	out $c0
+	mov DX,#61
+	out $c0
+	mov DX,#6d
+	out $c0
+	mov DX,#65
+	out $c0
+	mov DX,#3a
+	out $c0
+	mov DX,#20
+	out $c0
+	//
+	// start search
+	mov AX,#10
+	mov BX,#00
+	mov CX,#00
+	:startsearchforemptyspot
+		LDX
+		mov $00,AX
+		mov AX,DX
+		sub AX,#25
+		jnz endsearchforemptyspot
+		mov AX,$00
+		add AX,#05
+		jmp startsearchforemptyspot
+	:endsearchforemptyspot
+	// found empty spot for file
+	mov DX,#25
+	mov AX,$00
+	STX
+	// loop while getting name of file
+	:startgetinputname
+		in $a0
+		mov AX,DX
+		// empty input
+		add AX,#00
+		jz startgetinputname
+		// input is ENTER
+		sub AX,#0a
+		jz endgetinputname
+		// backslash
+			mov AX,DX
+			sub AX,#08
+			jnz afterbackslashinputloop
+			out $c0
+			dec cx
+			jmp startgetinputname
+		:afterbackslashinputloop
+		// store input
+		inc cx
+		mov BX,CX
+		mov AX,$00
+		STX
+		out $c0
+		jmp startgetinputname
+	:endgetinputname
+	//
+	// Add ending to name
+	inc cx
+	mov BX,CX
+	mov AX,$00
+	mov DX,#25
+	STX
+	inc cx
+	mov $01,CX
+	// line break
+	mov DX,#0a
+	out $c0
+	// start creating file content
+	:starttextinput
+		in $a0
+		mov AX,DX
+		add AX,#00
+		jz starttextinput
+		sub AX,#7e
+		jz endtextinput
+		mov AX,$01
+		add AX,#01
+		mov $01,AX
+		mov BX,AX
+		mov AX,$00
+		adc AX,#00
+		out $c0
+		STX
+		jmp starttextinput
+	:endtextinput
+	// add 0xff to file end
+	mov AX,$01
+	add AX,#01
+	mov $01,AX
+	mov BX,AX
+	mov AX,$00
+	adc AX,#00
+	mov DX,#ff
+	STX
+	jmp reset
+//
+//
+:reset
+mov AX,#00
+mov BX,#00
+mov CX,#00
+mov DX,#ff
+out $c0
+mov SP,#ff
+mov DX,#00
+jmp start
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//

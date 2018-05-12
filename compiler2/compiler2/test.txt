@@ -1,0 +1,17 @@
+:start
+	mov ax,$a8
+	mov $bb,ax
+	in $c0
+:hobo
+	jmp start
+	add ax bx
+	shl ax,#2b
+	mov bx,$1234
+	jz ende
+	mov $cx+ac,ax
+	call hobo
+	mov $fa+cx,bx
+	adc AX,$FC
+	push ax
+	inc cx
+:ende
