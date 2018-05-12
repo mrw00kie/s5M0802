@@ -42,6 +42,50 @@ ret
 //
 //
 :program_start
+// Print "Page(0-f):
+mov DX,#50 
+out $c0
+mov DX,#61 
+out $c0
+mov DX,#67 
+out $c0
+mov DX,#65 
+out $c0
+mov DX,#28 
+out $c0
+mov DX,#30 
+out $c0
+mov DX,#2d 
+out $c0
+mov DX,#66 
+out $c0
+mov DX,#29 
+out $c0
+mov DX,#3a
+out $c0
+// get page input
+:start_input_for_page
+	in $a0
+	mov AX,DX
+	add AX,#00
+	jz start_input_for_page
+	out $c0
+	shr AX,#04
+	sub AX,#06
+	jnz is_a_number
+	mov AX,DX
+	shl AX,#04
+	add AX,#90
+	jmp end_input_for_page
+	:is_a_number
+	mov AX,DX
+	shl AX,#04
+:end_input_for_page
+shr AX,#04
+mov $02,AX
+mov DX,#0a
+out $c0
+//
 mov CX,#00
 //
 // ROW
@@ -60,8 +104,12 @@ mov CX,#00
 	// print content ( 16 times )
 	// print as HEX Values
 	:print_row_values
-		mov AX,$00+CX
-		mov $00,AX
+		//mov AX,$00+CX
+		mov AX,$02
+		mov BX,CX
+		LDX
+		mov $00,DX
+		//mov $00,AX
 		call print_hex_number
 		mov DX,#20
 		out $c0
@@ -81,15 +129,19 @@ mov CX,#00
 	mov DX,#20
 	out $c0
 	// 
-	mov BX,CX
+	mov $03,CX
 	mov AX,CX
 	shr AX,#04
 	shl AX,#04
 	mov CX,AX
 	// loop through memory again and print as ASCII
 	:print_memory_as_ascii
-		mov AX,$00+CX
-		mov DX,AX
+		//mov AX,$00+CX
+		//mov DX,AX
+		mov AX,$02
+		mov BX,CX
+		LDX
+		mov AX,DX
 		add AX,#00
 		jz print_memory_is_illegal_char
 		sub AX,#ff
@@ -117,7 +169,7 @@ mov CX,#00
 		jmp print_memory_as_ascii
 	:print_memory_as_ascii_end
 	//
-	mov CX,BX
+	mov CX,$03
 	inc CX
 	mov AX,CX
 	add AX,#00
