@@ -56,8 +56,7 @@ Operations :
   A program that stores text files in RAM (starting locations are fixed: 0x1000/0x1500/0x1A00/...). It echos the input from the keyboard
   back into the RAM and uses indirect addressing in combination with the CX register to store input and to read the files.  
   When creating a file the memory looks something like this: 
-  %FILE_NAME%file content....0xFF - "0xFF" marks the end of the file and "%" encloses the file name, the file-starting locations are fixed
-  in memory (every 0x500 locations starting at 0x1000) so every file has a max. size of ~1280 characters but the fixed starting positions  
+  %FILE_NAME%file content....0xFF - "0xFF" marks the end of the file and "%" encloses the file name, the file-starting locations are fixed in memory (every 0x500 locations starting at 0x1000) so every file has a max. size of ~1280 characters but the fixed starting positions  
   guaranteed faster search times.
   ![alt text](https://i.imgur.com/jwivnTz.png)  
   ![alt text](https://i.imgur.com/nILyzbh.png)  
