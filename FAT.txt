@@ -1,0 +1,868 @@
+//
+//	Zero - Page
+//	0x00 | Variables : ret value of process_input | ... |
+//	0x10 | Input : "In Length" | 15 byte in ... string |
+//	0x20 | history : Current | 14 byte history | index
+//	0x30 | FAT
+//	0x40 | 
+//	...
+//	0xd0 | 
+//	0xe0 | 
+//	0xf0 | 
+//	
+//	
+//	
+//	
+jmp prgm_start
+// function for input
+// 0x01 dir
+// 0x02 mkdir
+// 0x03 cd <name>
+// 0x04 cd ..
+// 0x05 cls
+// 0x06 help
+:process_input
+	// reset return value
+	mov AX,#00
+	mov $00,AX
+	//
+	mov AX,$10
+	sub AX,#03
+	jz process_input_maybe_dir
+	//
+		// test for "cd"
+		mov AX,$11
+		sub AX,#63
+		jnz process_input_not_cd
+		mov AX,$12
+		sub AX,#64
+		jnz process_input_not_cd
+		mov AX,$13
+		sub AX,#20
+		jnz process_input_not_cd
+		// is "cd"
+		mov AX,$14
+		sub AX,#2e
+		jnz process_input_cd_with_name
+		mov AX,$15
+		sub AX,#2e
+		jnz process_input_cd_with_name
+		//
+		// is "cd .."
+		mov AX,#04
+		mov $00,AX
+		jmp process_input_end
+		//
+		:process_input_cd_with_name
+		// is "cd <name>"
+		mov AX,#03
+		mov $00,AX
+		jmp process_input_end
+		// input is not "cd <name>" / "cd .."
+		:process_input_not_cd
+	//
+	// test for "mkdir "
+		mov AX,$11
+		sub AX,#6d
+		jnz process_input_not_mkdir
+		mov AX,$12
+		sub AX,#6b
+		jnz process_input_not_mkdir
+		mov AX,$13
+		sub AX,#64
+		jnz process_input_not_mkdir
+		mov AX,$14
+		sub AX,#69
+		jnz process_input_not_mkdir
+		mov AX,$15
+		sub AX,#72
+		jnz process_input_not_mkdir
+		mov AX,$16
+		sub AX,#20
+		jnz process_input_not_mkdir
+		// input is "mkdir "
+		mov AX,#02
+		mov $00,AX
+	// not "mkdir <name>"
+	:process_input_not_mkdir
+	// test if "help"
+		mov AX,$11
+		sub AX,#68
+		jnz process_input_not_help
+		mov AX,$12
+		sub AX,#65
+		jnz process_input_not_help
+		mov AX,$13
+		sub AX,#6c
+		jnz process_input_not_help
+		mov AX,$14
+		sub AX,#70
+		jnz process_input_not_help
+		// input is "help"
+		mov AX,#06
+		mov $00,AX
+	// not "help"
+	:process_input_not_help
+	jmp process_input_end
+		// length of input is 3
+		:process_input_maybe_dir
+		mov AX,$11
+		sub AX,#64
+		jnz process_input_maybe_cls
+		mov AX,$12
+		sub AX,#69
+		jnz process_input_maybe_cls
+		mov AX,$13
+		sub AX,#72
+		jnz process_input_maybe_cls
+		// is "dir"
+		mov AX,#01
+		mov $00,AX
+		jmp process_input_end
+		//
+		// maybe it is "cls"
+		:process_input_maybe_cls
+		mov AX,$11
+		sub AX,#63
+		jnz process_input_end
+		mov AX,$12
+		sub AX,#6c
+		jnz process_input_end
+		mov AX,$13
+		sub AX,#73
+		jnz process_input_end
+		// it is "cls"
+		mov AX,#05
+		mov $00,AX
+		jmp process_input_end
+		//
+	// function end
+	:process_input_end
+ret
+//
+// clear input section of zero page
+:clear_input_block
+	mov AX,#00
+	mov $10,AX
+	mov $11,AX
+	mov $12,AX
+	mov $13,AX
+	mov $14,AX
+	mov $15,AX
+	mov $16,AX
+	mov $17,AX
+	mov $18,AX
+	mov $19,AX
+	mov $1a,AX
+	mov $1b,AX
+	mov $1c,AX
+	mov $1d,AX
+	mov $1e,AX
+	mov $1f,AX
+ret
+//
+//
+// print "root"
+:print_root
+	mov DX,#72
+	out $c0
+	mov DX,#6f
+	out $c0
+	mov DX,#6f
+	out $c0
+	mov DX,#74
+	out $c0
+ret
+//
+//
+// unknown command
+:unknown_command
+	mov DX,#5b 
+	out $c0
+	mov DX,#45 
+	out $c0
+	mov DX,#52 
+	out $c0
+	mov DX,#52 
+	out $c0
+	mov DX,#4f 
+	out $c0
+	mov DX,#52 
+	out $c0
+	mov DX,#5d 
+	out $c0
+	mov DX,#20
+	out $c0
+	mov DX,#27
+	out $c0
+	mov CX,#01
+	:unknown_command_output_loop
+		mov AX,$10+CX
+		mov DX,AX
+		out $c0
+		inc CX
+		mov AX,CX
+		sub AX,#10
+		jnz unknown_command_output_loop
+	mov DX,#27
+	out $c0
+	mov DX,#20
+	out $c0
+	mov DX,#69
+	out $c0
+	mov DX,#73
+	out $c0
+	mov DX,#20
+	out $c0
+	mov DX,#75
+	out $c0
+	mov DX,#6e
+	out $c0
+	mov DX,#6b
+	out $c0
+	mov DX,#6e
+	out $c0
+	mov DX,#6f
+	out $c0
+	mov DX,#77
+	out $c0
+	mov DX,#6e
+	out $c0
+	mov DX,#20
+	out $c0
+	mov DX,#6f 
+	out $c0
+	mov DX,#72 
+	out $c0
+	mov DX,#20 
+	out $c0
+	mov DX,#69 
+	out $c0
+	mov DX,#6e 
+	out $c0
+	mov DX,#63 
+	out $c0
+	mov DX,#6f 
+	out $c0
+	mov DX,#6d 
+	out $c0
+	mov DX,#70 
+	out $c0
+	mov DX,#6c 
+	out $c0
+	mov DX,#65 
+	out $c0
+	mov DX,#74 
+	out $c0
+	mov DX,#65 
+	out $c0
+	mov DX,#20 
+	out $c0
+	mov DX,#21
+	out $c0
+	mov DX,#0a
+	out $c0
+ret
+//
+//
+// "help" command
+:help_command
+	mov DX,#2d 
+	out $c0
+	mov DX,#64 
+	out $c0
+	mov DX,#69 
+	out $c0
+	mov DX,#72 
+	out $c0
+	mov DX,#0a 
+	out $c0
+	mov DX,#2d 
+	out $c0
+	mov DX,#6d 
+	out $c0
+	mov DX,#6b 
+	out $c0
+	mov DX,#64 
+	out $c0
+	mov DX,#69 
+	out $c0
+	mov DX,#72 
+	out $c0
+	mov DX,#20 
+	out $c0
+	mov DX,#3c 
+	out $c0
+	mov DX,#6e 
+	out $c0
+	mov DX,#61 
+	out $c0
+	mov DX,#6d 
+	out $c0
+	mov DX,#65 
+	out $c0
+	mov DX,#3e 
+	out $c0
+	mov DX,#0a 
+	out $c0
+	mov DX,#2d 
+	out $c0
+	mov DX,#63 
+	out $c0
+	mov DX,#64 
+	out $c0
+	mov DX,#20 
+	out $c0
+	mov DX,#2e 
+	out $c0
+	mov DX,#2e 
+	out $c0
+	mov DX,#0a 
+	out $c0
+	mov DX,#2d 
+	out $c0
+	mov DX,#63 
+	out $c0
+	mov DX,#64 
+	out $c0
+	mov DX,#20 
+	out $c0
+	mov DX,#3c 
+	out $c0
+	mov DX,#6e 
+	out $c0
+	mov DX,#61 
+	out $c0
+	mov DX,#6d 
+	out $c0
+	mov DX,#65 
+	out $c0
+	mov DX,#3e 
+	out $c0
+	mov DX,#0a 
+	out $c0
+	mov DX,#2d 
+	out $c0
+	mov DX,#63 
+	out $c0
+	mov DX,#6c 
+	out $c0
+	mov DX,#73 
+	out $c0
+	mov DX,#0a 
+	out $c0
+	mov DX,#2d 
+	out $c0
+	mov DX,#68 
+	out $c0
+	mov DX,#65 
+	out $c0
+	mov DX,#6c 
+	out $c0
+	mov DX,#70
+	out $c0
+	mov DX,#0a
+	out $c0
+ret
+//
+//
+:get_name_from_block
+	mov BX,#09
+	mov $0f,BX
+	:loop_trough_block
+		mov BX,$0f
+		mov AX,$02
+		add AX,#10
+		LDX
+		mov AX,DX
+		mov BX,$01
+		sub AX,BX
+		jz found_name
+		mov AX,$0f
+		add AX,#10
+		mov $0f,AX
+		sub AX,#09
+		jz no_search_match
+	jmp loop_trough_block
+	//
+	:no_search_match
+		mov DX,#3f
+		out $c0
+		out $c0
+		out $c0
+	ret
+	//
+	:found_name
+		mov AX,$0f
+		shr AX,#04
+		shl AX,#04
+		add AX,#00
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+		mov AX,BX
+		add AX,#01
+		mov BX,AX
+		mov AX,$02
+		add AX,#10
+		LDX
+		out $c0
+	//
+ret
+//
+//
+// "cd .."
+:cd_command
+	mov AX,$2f
+	mov CX,AX
+	sub AX,#01
+	jz can_not_cd_is_in_root
+		// can "cd .."
+		mov $2f,AX
+		mov AX,#00
+		mov $20+CX,AX
+		mov AX,CX
+		sub AX,#01
+		mov CX,AX
+		mov AX,$20+CX
+		mov $20,AX
+	:can_not_cd_is_in_root
+ret
+//
+//
+// list dir content
+:dir_command
+	//loop through current block
+		mov AX,$20
+		add AX,#10
+		mov $0e,AX
+		mov BX,#00
+		mov $0d,BX
+		//
+		// loop through block
+		:block_loop_start
+			//
+			mov CX,#00
+			//
+			mov AX,$0e
+			mov BX,$0d
+			LDX
+			mov AX,DX
+			add AX,#00
+			jz skip_name_loop
+				mov DX,#20
+				out $c0
+			:name_loop_start
+				mov AX,$0e
+				mov BX,$0d
+				LDX
+				add AX,#00
+				out $c0
+				mov AX,BX
+				add AX,#01
+				mov $0d,AX
+				// for loop
+				inc CX
+				mov AX,CX
+				sub AX,#09
+			jnz name_loop_start
+			:skip_name_loop
+			//
+			// "big" loop
+			mov AX,$0d
+			shr AX,#04
+			add AX,#01
+			shl AX,#04
+			mov $0d,AX
+			add AX,#00
+		jnz block_loop_start
+	//
+	mov DX,#0a
+	out $c0
+ret
+//
+//
+// "mkdir <name>"
+:mkdir_command
+	//
+	mov CX,#01
+	:loop_look_for_empty_block
+		mov AX,$30+CX
+		add AX,#00
+	jz found_empty_block
+		inc CX
+	jmp loop_look_for_empty_block
+	:found_empty_block
+	mov AX,#01
+	mov $30+CX,AX
+	mov AX,CX
+	mov CX,$2f
+	inc CX
+	mov $20+CX,AX
+	mov $2f,CX
+	// store in new name and block number in current block
+	mov AX,$20
+	add AX,#10
+	mov $0c,AX
+	mov BX,#09
+	mov $0b,BX
+	:loop_trought_current_block
+		mov AX,$0c
+		mov BX,$0b
+		LDX
+		mov AX,DX
+		add AX,#00
+		jz found_spot_in_block
+		mov AX,$0b
+		add AX,#10
+		mov $0b,AX
+	jmp loop_trought_current_block
+	// copy block number to current block
+	:found_spot_in_block
+	mov CX,$2f
+	mov AX,$20+CX
+	mov DX,AX
+	mov AX,$0c
+	mov BX,$0b
+	STX
+	// copy name of new block
+	mov AX,BX
+	shr AX,#04
+	shl AX,#04
+	mov $0b,AX
+	//
+	mov AX,$0b
+	add AX,#00
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$17
+	STX
+	//
+	mov AX,$0b
+	add AX,#01
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$18
+	STX
+	//
+	mov AX,$0b
+	add AX,#02
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$19
+	STX
+	//
+	mov AX,$0b
+	add AX,#03
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$1a
+	STX
+	//
+	mov AX,$0b
+	add AX,#04
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$1b
+	STX
+	//
+	mov AX,$0b
+	add AX,#05
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$1c
+	STX
+	//
+	mov AX,$0b
+	add AX,#06
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$1d
+	STX
+	//
+	mov AX,$0b
+	add AX,#07
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$1e
+	STX
+	//
+	mov AX,$0b
+	add AX,#08
+	mov BX,AX
+	mov AX,$0c
+	mov DX,$1f
+	STX
+	mov CX,$2f
+	mov AX,$20+CX
+	mov $20,AX
+ret
+//
+//
+// "cd <name>"
+:cdname_command
+	// setup variables
+	mov AX,$20
+	add AX,#10
+	mov $0a,AX
+	mov BX,#f0
+	mov $09,BX
+	// outer loop
+	:outer_loop_start
+		mov AX,$09
+		add AX,#10
+		mov $09,AX
+		mov $08,AX
+		mov CX,#04
+		//
+		// compare name loop
+		:name_compare_loop
+			//compare ...
+				mov AX,$0a
+				mov BX,$08
+				LDX
+				mov BX,DX
+				mov AX,$10+CX
+				sub AX,BX
+				jnz next_line_in_block
+			//
+			//
+			// exit
+			mov AX,$08
+			add AX,#01
+			mov $08,AX
+			inc CX
+			mov $07,CX
+			shl AX,#04
+			shr AX,#04
+			sub AX,#08
+			jz name_do_match
+		jmp name_compare_loop
+		:next_line_in_block
+		//
+		mov AX,$09
+		sub AX,#f0
+		jz no_match_in_current_block
+	jmp outer_loop_start
+	:name_do_match
+		mov AX,$09
+		add AX,#09
+		mov BX,AX
+		mov AX,$0a
+		LDX
+		mov AX,$2f
+		mov CX,AX
+		inc CX
+		mov AX,DX
+		mov $20,AX
+		mov $20+CX,AX
+		mov AX,CX
+		mov $2f,AX
+	ret
+	//
+	:no_match_in_current_block
+ret
+//
+//
+//
+//
+:prgm_start
+// Init FAT and "history"
+mov AX,#01
+mov $31,AX
+mov $20,AX
+mov $21,AX
+mov $2f,AX
+:prgm_loop
+	//
+	// print path
+	call print_root
+	//
+	mov AX,$20
+	sub AX,#01
+	jz is_inside_root
+		// not inside root
+		mov CX,#02
+		:looping_through_history
+			//
+			mov AX,$20+CX
+			add AX,#00
+			jz looping_through_history_end
+			mov $01,AX
+			mov AX,$1f+CX
+			mov $02,AX
+			mov DX,#5c
+			out $c0
+			call get_name_from_block
+			inc CX
+			//
+			jmp looping_through_history
+		:looping_through_history_end
+	:is_inside_root
+	// print ">"
+	mov DX,#3e
+	out $c0
+	//
+	//
+	// init input
+	call clear_input_block
+	mov CX,#01
+	// input loop
+	:input_loop_start
+		in $a0
+		mov AX,DX
+		add AX,#00
+		// no key pressed
+		jz input_loop_start
+		sub AX,#0a
+		jz input_end
+		// key pressed and is not enter
+		out $c0
+		mov AX,DX
+		mov $10+CX,AX
+		inc CX
+		mov AX,CX
+		sub AX,#10
+		// prevent overflow
+		jz input_end
+		jmp input_loop_start
+	:input_end
+	// store input length
+	mov AX,CX
+	sub AX,#01
+	mov $10,AX
+	//
+	// call input processing function
+	call process_input
+	//
+	//
+	// Line Break
+	mov DX,#0a
+	out $c0
+	// unknown command
+		mov AX,$00
+		add AX,#00
+		jnz not_unknwon_command
+			call unknown_command
+			jmp prgm_loop
+	:not_unknwon_command
+	// "dir"
+		mov AX,$00
+		sub AX,#01
+		jnz not_dir_command
+			call dir_command
+			jmp prgm_loop
+	:not_dir_command
+	//
+	// "mkdir"
+		mov AX,$00
+		sub AX,#02
+		jnz not_mkdir_command
+			call mkdir_command
+			jmp prgm_loop
+	:not_mkdir_command
+	//
+	// "cd <name>"
+		mov AX,$00
+		sub AX,#03
+		jnz not_cdname_command
+			call cdname_command
+			jmp prgm_loop
+	:not_cdname_command
+	//
+	// "cd .."
+		mov AX,$00
+		sub AX,#04
+		jnz not_cd_command
+			call cd_command
+			jmp prgm_loop
+	:not_cd_command
+	//
+	// "cls"
+		mov AX,$00
+		sub AX,#05
+		jnz not_cls_command
+			mov DX,#ff
+			out $c0
+			jmp prgm_loop
+	:not_cls_command
+	//
+	// "help"
+		mov AX,$00
+		sub AX,#06
+		jnz not_help_command
+			call help_command
+			jmp prgm_loop
+	:not_help_command
+	//
+	// temp code / debug
+	:debug_temp
+	mov AX,$00
+	add AX,#30
+	mov DX,AX
+	out $c0
+	mov DX,#0a
+	out $c0
+	//
+	jmp prgm_loop
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
