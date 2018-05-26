@@ -1,0 +1,204 @@
+//
+//
+jmp program_start
+//
+:print_hex_number
+	// Print "higher part" of number
+	mov AX,$00
+	shr AX,#04
+	mov BX,AX
+	sub AX,#0a
+	mov AX,BX
+	jnc is_a_letter
+	add AX,#30
+	jmp print_number
+	:is_a_letter
+	sub AX,#09
+	add AX,#60
+	//
+	:print_number
+	mov DX,AX
+	out $c0
+	//
+	// Print "lower part" of number
+	mov AX,$00
+	shl AX,#04
+	shr AX,#04
+	mov BX,AX
+	sub AX,#0a
+	mov AX,BX
+	jnc is_a_letter_2
+	add AX,#30
+	jmp print_number_2
+	:is_a_letter_2
+	sub AX,#09
+	add AX,#60
+	//
+	:print_number_2
+	mov DX,AX
+	out $c0
+ret
+//
+//
+//
+:program_start
+// Print "Page(0-f):
+mov DX,#50 
+out $c0
+mov DX,#61 
+out $c0
+mov DX,#67 
+out $c0
+mov DX,#65 
+out $c0
+mov DX,#28 
+out $c0
+mov DX,#30 
+out $c0
+mov DX,#2d 
+out $c0
+mov DX,#66 
+out $c0
+mov DX,#29 
+out $c0
+mov DX,#3a
+out $c0
+// get page input
+:start_input_for_page
+	in $a0
+	mov AX,DX
+	add AX,#00
+	jz start_input_for_page
+	out $c0
+	shr AX,#04
+	sub AX,#06
+	jnz is_a_number
+	mov AX,DX
+	shl AX,#04
+	add AX,#90
+	jmp end_input_for_page
+	:is_a_number
+	mov AX,DX
+	shl AX,#04
+:end_input_for_page
+shr AX,#04
+mov $02,AX
+mov DX,#0a
+out $c0
+//
+mov CX,#00
+//
+// ROW
+:print_row
+	// " XX | "
+	mov DX,#20
+	out $c0
+	mov $00,CX
+	call print_hex_number
+	mov DX,#20
+	out $c0
+	mov DX,#7c
+	out $c0
+	mov DX,#20
+	out $c0
+	// print content ( 16 times )
+	// print as HEX Values
+	:print_row_values
+		//mov AX,$00+CX
+		mov AX,$02
+		mov BX,CX
+		LDX
+		mov $00,DX
+		//mov $00,AX
+		call print_hex_number
+		mov DX,#20
+		out $c0
+		mov AX,CX
+		shl AX,#04
+		shr AX,#04
+		sub AX,#0f
+		jz print_row_values_end
+		inc cx
+		jmp print_row_values
+	:print_row_values_end
+	// print " | "
+	mov DX,#20
+	out $c0
+	mov DX,#7c
+	out $c0
+	mov DX,#20
+	out $c0
+	// 
+	mov $03,CX
+	mov AX,CX
+	shr AX,#04
+	shl AX,#04
+	mov CX,AX
+	// loop through memory again and print as ASCII
+	:print_memory_as_ascii
+		//mov AX,$00+CX
+		//mov DX,AX
+		mov AX,$02
+		mov BX,CX
+		LDX
+		mov AX,DX
+		add AX,#00
+		jz print_memory_is_illegal_char
+		sub AX,#ff
+		jz print_memory_is_illegal_char
+		mov AX,DX
+		sub AX,#0a
+		jz print_memory_is_illegal_char
+		mov AX,DX
+		sub AX,#0d
+		jz print_memory_is_illegal_char
+		mov AX,DX
+		sub AX,#0c
+		jz print_memory_is_illegal_char
+		jmp print_memory_is_not_illegal_char
+			:print_memory_is_illegal_char
+			mov DX,#2e
+		:print_memory_is_not_illegal_char
+		out $c0
+		mov AX,CX
+		shl AX,#04
+		shr AX,#04
+		sub AX,#0f
+		jz print_memory_as_ascii_end
+		inc CX
+		jmp print_memory_as_ascii
+	:print_memory_as_ascii_end
+	//
+	mov CX,$03
+	inc CX
+	mov AX,CX
+	add AX,#00
+	jz memory_dump_end
+	mov DX,#0a
+	out $c0
+	jmp print_row
+	//
+	//
+	:memory_dump_end
+	hlt
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
