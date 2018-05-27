@@ -501,13 +501,16 @@ ret
 			mov AX,DX
 			add AX,#00
 			jz skip_name_loop
-				mov DX,#20
-				out $c0
+				
 			:name_loop_start
 				mov AX,$0e
 				mov BX,$0d
 				LDX
+				mov AX,DX
 				add AX,#00
+				jnz name_loop_char_is_not_zero
+				mov DX,#20
+				:name_loop_char_is_not_zero
 				out $c0
 				mov AX,BX
 				add AX,#01
@@ -517,6 +520,37 @@ ret
 				mov AX,CX
 				sub AX,#09
 			jnz name_loop_start
+			//
+			// test if file is dir
+			mov AX,$0d
+			shr AX,#04
+			shl AX,#04
+			add AX,#0f
+			mov BX,AX
+			mov AX,$0e
+			LDX
+			mov AX,DX
+			add AX,#00
+			jnz not_a_dir
+			// print "  <DIR>"
+			mov DX,#20
+			out $c0
+			mov DX,#20
+			out $c0
+			mov DX,#3c
+			out $c0
+			mov DX,#44
+			out $c0
+			mov DX,#49
+			out $c0
+			mov DX,#52
+			out $c0
+			mov DX,#3e
+			out $c0
+			:not_a_dir
+			// next line
+			mov DX,#0a
+			out $c0
 			:skip_name_loop
 			//
 			// "big" loop
@@ -527,9 +561,6 @@ ret
 			mov $0d,AX
 			add AX,#00
 		jnz block_loop_start
-	//
-	mov DX,#0a
-	out $c0
 ret
 //
 //
@@ -767,6 +798,13 @@ mov $2f,AX
 		jz input_loop_start
 		sub AX,#0a
 		jz input_end
+		mov AX,DX
+		sub AX,#08
+		jnz input_is_not_backspace
+			dec CX
+			out $c0
+			jmp input_loop_start
+		:input_is_not_backspace
 		// key pressed and is not enter
 		out $c0
 		mov AX,DX
